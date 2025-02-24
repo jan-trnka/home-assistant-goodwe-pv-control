@@ -1,0 +1,30 @@
+blueprint:
+  name: Auto Set DoD
+  description: Automatically changes battery DoD depending on today's forecast
+  domain: automation
+  input:
+    goodwe_entity:
+      name: DoD Entity
+      description: The target entity which sets DoD of the battery
+      selector:
+        target:
+          entity:
+            domain: number
+            integration: goodwe
+
+triggers:
+  - trigger: time
+    at: 06:00:00
+conditions:
+  - condition: numeric_state
+    entity_id: sensor.energy_production_today
+    above: input_number.threshold_for_changing_dod
+  - condition: state
+    entity_id: input_select.season
+    state: Winter
+actions:
+  - action: number.set_value
+    target: !input goodwe_entity
+    data:
+      value: "{{ states('sensor.ideal_dod_value') | int }}"
+mode: single
