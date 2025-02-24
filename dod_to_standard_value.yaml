@@ -1,0 +1,34 @@
+blueprint:
+  name: Set Winter DoD back to standard value
+  description: Automatically changes battery DoD to standard winter value
+  domain: automation
+  input:
+    goodwe_soc_entity:
+      name: SoC Entity
+      description: The enitity describing state of charge of the battery
+      selector:
+        entity:
+          domain: sensor
+          integration: goodwe
+    goodwe_dod_entity:
+      name: DoD Entity
+      description: The target entity which sets DoD of the battery
+      selector:
+        target:
+          entity:
+            domain: number
+            integration: goodwe
+
+triggers:
+- trigger: numeric_state
+  entity_id: !input goodwe_soc_entity
+  below: sensor.winter_tmp_threshold
+  above: input_number.winter_dod
+conditions:
+- condition: time
+  after: '12:00:00'
+actions:
+  - action: number.set_value
+    target: !input goodwe_dod_entity
+    data:
+      value: '{{ states(''input_number.winter_dod'') | int }}'
