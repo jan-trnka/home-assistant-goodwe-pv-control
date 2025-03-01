@@ -20,15 +20,15 @@ blueprint:
             integration: goodwe
 
 triggers:
-- trigger: numeric_state
-  entity_id: !input goodwe_soc_entity
-  below: sensor.winter_tmp_threshold
-  above: input_number.winter_dod
+  - trigger: numeric_state
+    entity_id: !input goodwe_soc_entity
+    below: sensor.winter_tmp_threshold
+    above: input_number.winter_dod
 conditions:
-- condition: time
-  after: '12:00:00'
+  - condition: time
+    after: "12:00:00"
 actions:
   - action: number.set_value
     target: !input goodwe_dod_entity
     data:
-      value: '{{ states(''input_number.winter_dod'') | int }}'
+      value: "{{ states('input_number.winter_dod') | int }}"
