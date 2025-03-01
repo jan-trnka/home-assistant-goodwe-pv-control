@@ -1,0 +1,65 @@
+blueprint:
+  name: Fully Charge Battery Once a Week
+  description: Charges battery to 100 % if wasn't charged during last week 
+  domain: automation
+  input:
+    time:
+      name: Time
+      description: Time of start battery charging
+      selector:
+        time:
+    production_forecast:
+      name: Production Forecast
+      description: Forecast of today's production
+      selector:
+        entity:
+          domain: sensor
+    goodwe_power:
+      name: GoodWe Battery Power
+      description: The target entity describing power of battery charging
+      selector:
+        target:
+          entity:
+            domain: number
+            integration: goodwe
+    goodwe_soc:
+      name: GoodWe SoC Entity
+      description: The target entity describing final value of battery charging
+      selector:
+        target:
+          entity:
+            domain: number
+            integration: goodwe
+    goodwe_mode:
+      name: GoodWe Mode
+      description: Entity describing mode of the inverter
+      selector:
+        entity:
+          domain: select
+          integration: goodwe
+
+triggers:
+  - trigger: time
+    at: !input time
+conditions:
+  - condition: state
+    entity_id: binary_sensor.battery_was_fully_charged_in_last_week
+    state: 'off'
+  - condition: numeric_state
+    entity_id: !input production_forecast
+    below: input_number.threshold_for_changing_dod
+actions:
+  - action: number.set_value
+    target: !input goodwe_power
+    data:
+      value: 20
+  - action: number.set_value
+    target: !input goodwe_soc
+    data:
+      value: 100
+  - action: select.select_option
+    target:
+      entity_id: !input goodwe_mode
+    data:
+      option: "eco_charge"
+mode: single
