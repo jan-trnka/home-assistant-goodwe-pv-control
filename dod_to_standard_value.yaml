@@ -3,6 +3,11 @@ blueprint:
   description: Automatically changes battery DoD to standard winter value
   domain: automation
   input:
+    time:
+      name: Time
+      description: Time after which the set should be performed
+      selector:
+        time:
     goodwe_soc_entity:
       name: SoC Entity
       description: The enitity describing state of charge of the battery
@@ -26,7 +31,7 @@ triggers:
     above: input_number.winter_dod
 conditions:
   - condition: time
-    after: "12:00:00"
+    after: !input time
 actions:
   - action: number.set_value
     target: !input goodwe_dod_entity
