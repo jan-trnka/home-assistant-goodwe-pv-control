@@ -13,8 +13,9 @@ blueprint:
       description: The enitity describing state of charge of the battery
       selector:
         entity:
-          domain: sensor
-          integration: goodwe
+          filter:
+            domain: sensor
+            integration: goodwe
     goodwe_dod_entity:
       name: DoD Entity
       description: The target entity which sets DoD of the battery

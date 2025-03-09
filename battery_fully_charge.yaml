@@ -13,7 +13,8 @@ blueprint:
       description: Forecast of today's production
       selector:
         entity:
-          domain: sensor
+          filter:
+            domain: sensor
     goodwe_power:
       name: GoodWe Battery Power
       description: The target entity describing power of battery charging
@@ -34,9 +35,10 @@ blueprint:
       name: GoodWe Mode
       description: Entity describing mode of the inverter
       selector:
-        entity:
-          domain: select
-          integration: goodwe
+        target:
+          entity:
+            domain: select
+            integration: goodwe
 
 triggers:
   - trigger: time
@@ -61,8 +63,7 @@ actions:
     data:
       value: 100
   - action: select.select_option
-    target:
-      entity_id: !input goodwe_mode
+    target: !input goodwe_mode
     data:
       option: "eco_charge"
 mode: single
