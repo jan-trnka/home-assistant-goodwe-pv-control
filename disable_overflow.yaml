@@ -1,0 +1,35 @@
+blueprint:
+  name: Disable Overflow
+  description: 'Disables overflow when eletricity price is negative'
+  domain: automation
+  input:
+    spot_price:
+      name: Energy Spot Price
+      description: Actual Energy Spot Price Entity
+      selector:
+        entity:
+          filter:
+            domain: sensor
+    goodwe_entity:
+      name: Export Limit
+      description: Inverter Export Limit Target
+      selector:
+        target:
+          entity:
+            domain: number
+            integration: goodwe
+
+triggers:
+  - trigger: numeric_state
+    entity_id: !input spot_price
+    below: 0
+conditions: []
+actions:
+  - action: set_value
+    target: !input goodwe_entity
+    data:
+      value: 0
+  - action: script.allow_overflow_when_positive_price_again
+    metadata: {}
+    data: {}
+mode: single
