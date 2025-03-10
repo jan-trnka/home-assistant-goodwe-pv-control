@@ -25,7 +25,7 @@ triggers:
     below: 0
 conditions: []
 actions:
-  - action: set_value
+  - action: number.set_value
     target: !input goodwe_entity
     data:
       value: 0
