@@ -5,14 +5,14 @@ blueprint:
   input:
     spot_price:
       name: Energy Spot Price
-      description: Actual Energy Spot Price Entity
+      description: Actual energy spot price entity
       selector:
         entity:
           filter:
             domain: sensor
     goodwe_entity:
       name: Export Limit
-      description: Inverter Export Limit Target
+      description: Inverter export limit target entity
       selector:
         target:
           entity:
