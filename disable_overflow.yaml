@@ -18,6 +18,16 @@ blueprint:
           entity:
             domain: number
             integration: goodwe
+    limit_value:
+      name: Export Limit Number
+      description: Value of the original export limit (W)
+      selector:
+        number:
+          min: 0
+          max: 15000
+          step: 100
+          unit_of_measurement: W
+          mode: slider
 
 triggers:
   - trigger: numeric_state
@@ -31,5 +41,7 @@ actions:
       value: 0
   - action: script.allow_overflow_when_positive_price_again
     metadata: {}
-    data: {}
+    data:
+      goodwe_entity: !input goodwe_entity
+      limit_value: !input limit_value
 mode: single
