@@ -1,6 +1,6 @@
 blueprint:
   name: Disable Overflow
-  description: 'Disables overflow when eletricity price is negative'
+  description: 'Disables overflow when eletricity price is negative (Export Limit is set to 0). When the spot price is positive again, script sets Export Limit back to entered Value.'
   domain: automation
   input:
     spot_price:
@@ -42,6 +42,7 @@ actions:
   - action: script.allow_overflow_when_positive_price_again
     metadata: {}
     data:
+      spot_price: !input spot_price
       goodwe_entity: !input goodwe_entity
       limit_value: !input limit_value
 mode: single
