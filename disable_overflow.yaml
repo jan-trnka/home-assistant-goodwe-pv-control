@@ -34,15 +34,17 @@ triggers:
     entity_id: !input spot_price
     below: 0
 conditions: []
+variables:
+  spot_price: !input spot_price
 actions:
   - action: number.set_value
     target: !input goodwe_entity
     data:
       value: 0
-  - action: script.allow_overflow_when_positive_price_again
-    metadata: {}
-    data:
-      spot_price: !input spot_price
-      goodwe_entity: !input goodwe_entity
-      limit_value: !input limit_value
+  - sequence:
+    - wait_template: '{{ states(spot_price) | float(default=0) > 0 }}'
+    - action: number.set_value
+      target: !input goodwe_entity
+      data:
+        value: !input limit_value
 mode: single
