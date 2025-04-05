@@ -11,6 +11,13 @@ blueprint:
           entity:
             domain: number
             integration: goodwe
+    winter_dod:
+      name: Winter DoD Value
+      description: Winter depth of discharge input number
+      selector:
+        entity:
+          filter:
+            domain: input_number
 
 triggers:
   - trigger: time
@@ -22,9 +29,22 @@ conditions:
   - condition: state
     entity_id: input_select.season
     state: Winter
+variables:
+  winter_dod: !input winter_dod
 actions:
   - action: number.set_value
     target: !input goodwe_entity
     data:
-      value: "{{ states('sensor.ideal_dod_value') | int }}"
+      value: "{{ states('sensor.ideal_dod_value') | int(default=50) }}"
+  - sequence:
+    - wait_for_trigger:
+      - value_template: '{% set SoC = states(''sensor.battery_state_of_charge'')
+        | float(default=0) %} {% set winter_dod = states(winter_dod)
+        | float(default=0) %}
+        {{ SoC < (winter_dod + 1) }}'
+        trigger: template
+    - action: number.set_value
+      target: !input goodwe_entity
+      data:
+        value: "{{ states(winter_dod) | int(default=50) }}"
 mode: single
