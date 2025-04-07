@@ -8,7 +8,7 @@ This repository contains a set of Home Assistant blueprints designed to automate
 
 Automatically adjusts the Depth of Discharge (DoD) of the battery based on today's solar production forecast and your typical energy consumption. It ensures conservative discharge during low production periods (e.g., winter), while allowing deeper discharge during expected sunny days.
 
-[![Import Blueprint](https://my.home-assistant.io/badges/blueprint_import.svg)](https://my.home-assistant.io/redirect/blueprint_import/?repository_url=https://raw.githubusercontent.com/jan-trnka/home-assistant-pv-system/main/auto_set_dod.yaml)
+[![Import Blueprint](https://my.home-assistant.io/badges/blueprint_import.svg)](https://my.home-assistant.io/redirect/blueprint_import/?repository_url=https://github.com/jan-trnka/home-assistant-pv-system/blob/main/auto_set_dod.yaml)
 
 ---
 
