@@ -32,7 +32,7 @@ Disables electricity overflow when the spot price of electricity is negative (i.
 
 This automation turns off the inverter’s eco discharge mode when consumption exceeds production. It helps in preventing excessive battery discharge when energy consumption is higher than the available solar production.
 
-[[![Import Blueprint](https://my.home-assistant.io/badges/blueprint_import.svg)](https://my.home-assistant.io/redirect/blueprint_import/?repository_url=https://raw.githubusercontent.com/jan-trnka/home-assistant-pv-system/blob/main/turn_off_eco_discharge.yaml)](https://github.com/jan-trnka/home-assistant-pv-system/blob/main/turn_off_eco_discharge_when_peak.yaml)
+[![Open your Home Assistant instance and show the blueprint import dialog with a specific blueprint pre-filled.](https://my.home-assistant.io/badges/blueprint_import.svg)](https://my.home-assistant.io/redirect/blueprint_import/?blueprint_url=https%3A%2F%2Fgithub.com%2Fjan-trnka%2Fhome-assistant-pv-system%2Fblob%2Fmain%2Fturn_off_eco_discharge_when_peak.yaml)
 
 ---
 
