@@ -16,15 +16,15 @@ blueprint:
           filter:
             domain: sensor
     goodwe_power:
-      name: GoodWe Battery Power
-      description: The target entity describing power of battery charging
+      name: GoodWe Charging Power
+      description: The target entity describing power of eco charging mode
       selector:
         target:
           entity:
             domain: number
             integration: goodwe
-    goodwe_soc:
-      name: GoodWe SoC Entity
+    goodwe_final_soc:
+      name: GoodWe Final SoC Entity
       description: The target entity describing final value of battery charging
       selector:
         target:
@@ -38,6 +38,14 @@ blueprint:
         target:
           entity:
             domain: select
+            integration: goodwe
+    goodwe_actual_soc:
+      name: GoodWe SoC Sensor
+      description: GoodWe actual state of charge sensor
+      selector:
+        entity:
+          filter:
+            domain: sensor
             integration: goodwe
 
 triggers:
@@ -53,17 +61,27 @@ conditions:
   - condition: state
     entity_id: input_select.season
     state: Winter
+variables:
+  soc: !input goodwe_actual_soc
 actions:
   - action: number.set_value
     target: !input goodwe_power
     data:
       value: 20
+  - delay: 00:00:05
   - action: number.set_value
-    target: !input goodwe_soc
+    target: !input goodwe_final_soc
     data:
       value: 100
+  - delay: 00:00:05
   - action: select.select_option
     target: !input goodwe_mode
     data:
-      option: "eco_charge"
+      option: eco_charge
+  - sequence:
+    - wait_template: '{{ states(soc) | float(default=0) > 99 }}'
+    - action: select.select_option
+      target: !input goodwe_mode
+      data:
+        option: general
 mode: single

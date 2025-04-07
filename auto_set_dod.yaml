@@ -3,14 +3,35 @@ blueprint:
   description: Automatically changes battery DoD depending on today's forecast
   domain: automation
   input:
-    goodwe_entity:
+    goodwe_dod_target:
       name: DoD Entity
-      description: The target entity which sets DoD of the battery
+      description: The target entity which sets depth of discharge of the battery
       selector:
         target:
           entity:
             domain: number
             integration: goodwe
+    production_forecast:
+      name: PV Production Forecast
+      description: Forecast of today's pv production
+      selector:
+        entity:
+          filter:
+            domain: sensor
+    capacity:
+      name: Battery Capacity
+      description: Capacity value of the battery
+      selector:
+        entity:
+          filter:
+            domain: input_number
+    average_consumption:
+      name: Average Daily House Consumption
+      description: Average house consumpiton in last week
+      selector:
+        entity:
+          filter:
+            domain: sensor
     winter_dod:
       name: Winter DoD Value
       description: Winter depth of discharge input number
@@ -18,6 +39,14 @@ blueprint:
         entity:
           filter:
             domain: input_number
+    goodwe_actual_soc:
+      name: GoodWe SoC Sensor
+      description: GoodWe actual state of charge sensor
+      selector:
+        entity:
+          filter:
+            domain: sensor
+            integration: goodwe
 
 triggers:
   - trigger: time
@@ -31,20 +60,37 @@ conditions:
     state: Winter
 variables:
   winter_dod: !input winter_dod
+  actual_soc: !input goodwe_actual_soc
+  pv_prediction: !input production_forecast
+  capacity: !input capacity
+  average_consumption: !input average_consumption
 actions:
   - action: number.set_value
-    target: !input goodwe_entity
+    target: !input goodwe_dod_target
     data:
-      value: "{{ states('sensor.ideal_dod_value') | int(default=50) }}"
+      value_template: >-
+        {% set pv_prediction = states(pv_prediction) | float(default=0) %}
+        {% set capacity = states(capacity) | float(default=1) %}
+        {% set consumption = states(average_consumption) | float(default=0) / 24 * 5 %}
+        {% set winter_dod = states(winter_dod) | float(default=0) %}
+        {% set result = 100 * (pv_power - consumption) / capacity | round(1, default=0) %}
+
+        {% if result < winter_dod %}
+          {{ winter_dod | int }}
+        {% elif result > 80 %}
+          {{ 80 }}
+        {% else %}
+          {{ result | int }}
+        {% endif %}
   - sequence:
     - wait_for_trigger:
-      - value_template: '{% set SoC = states(''sensor.battery_state_of_charge'')
+      - value_template: '{% set SoC = states(actual_soc)
         | float(default=0) %} {% set winter_dod = states(winter_dod)
         | float(default=0) %}
         {{ SoC < (winter_dod + 1) }}'
         trigger: template
     - action: number.set_value
-      target: !input goodwe_entity
+      target: !input goodwe_dod_target
       data:
         value: "{{ states(winter_dod) | int(default=50) }}"
 mode: single

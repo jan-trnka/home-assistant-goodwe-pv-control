@@ -1,0 +1,48 @@
+blueprint:
+  name: Turn Off Eco Discarge Mode When Peak
+  description: 'Turns off eco discharge mode when consumpiton is bigger than production'
+  domain: automation
+  input:
+    consumption:
+      name: House Consumption
+      description: Sensor of actual house consumption
+      selector:
+        entity:
+          filter:
+            domain: sensor
+    pv_power:
+      name: PV Power
+      description: Sensor of actual pv generation
+      selector:
+        entity:
+          filter:
+            domain: sensor
+    goodwe_mode:
+      name: GoodWe Mode
+      description: Entity describing mode of the inverter
+      selector:
+        entity:
+          filter:
+            domain: select
+            integration: goodwe
+
+
+triggers:
+- trigger: numeric_state
+  entity_id: !input consumption
+  for:
+    hours: 0
+    minutes: 0
+    seconds: 15
+  above: !input pv_power
+conditions:
+  - condition: state
+    entity_id: !input goodwe_mode
+    state: "eco_discharge"
+actions:
+  - action: select.select_option
+    target:
+      entity_id: !input goodwe_mode
+    data:
+      option: general
+mode: single
