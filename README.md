@@ -23,11 +23,25 @@ Automatically adjusts the Depth of Discharge (DoD) of the battery based on today
 - Available from HA integrations like *Forecast.Solar* which is recommended approach. Eventually you may have access to another service as *Solcast* etc.
 
 **Battery Capacity**
+- Input number defining Battery Capacity
+- It's up on user which value is set
+- Available for example after defining in **configuration.yaml** file or you can have your own input number
+
+```YAML
+input_number:
+  battery_capacity:
+    name: Battery Capacity
+    icon: mdi:battery
+    min: 0
+    max: 30
+    unit_of_measurement: kWh
+    step: 0.1
+```
 
 **Average Daily House Consumption**
 - Sensor based on Final Daily House Consumption sensor which holds final value of consumption day before
 - Contains average daily house consumpiton in last 7 days
-- Available for example after defining in **cofiguration.yaml** file or you can have your own sensor
+- Available for example after defining in **configuration.yaml** file or you can have your own sensor
 
 ```YAML
 sensor:
@@ -56,7 +70,7 @@ template:
 **Winter DoD Value**
 - Input number defining battery Depth of Discharge during winter time
 - It's up on user which value is set
-- Available for example after defining in **cofiguration.yaml** file or you can have your own input number
+- Available for example after defining in **configuration.yaml** file or you can have your own input number
 
 ```YAML
 input_number:
