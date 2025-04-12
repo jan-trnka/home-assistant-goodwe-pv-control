@@ -114,6 +114,21 @@ Ensures that the battery is fully charged at least once a week during winter, if
 **Time**
 - Time of start battery charging
 
+**Count of 100% Battery State in a Week**
+- Sensor which holds count of 100% battery charges in last 7 days based on history stats
+- Available for example after defining in **configuration.yaml** file or you can have your own sensor
+
+```YAML
+sensor:
+  - platform: history_stats
+    name: Count of 100% Battery State in a Week
+    entity_id: sensor.battery_state_of_charge
+    state: 100
+    type: count
+    start: "{{ now().replace(hour=0, minute=0, second=0) - timedelta(days=7) }}"
+    end: "{{ now() }}"
+```
+
 **PV Production Forecast**
 - Sensor ensuring daily forecast of PV production
 - Available from HA integrations like *Forecast.Solar* which is recommended approach. Eventually you may have access to another service as *Solcast* etc.
