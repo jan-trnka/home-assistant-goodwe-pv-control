@@ -106,6 +106,73 @@ input_number:
 
 ---
 
+## 🔁 Fully Charge Battery Once a Week
+
+Ensures that the battery is fully charged at least once a week during winter, if it hasn't been fully charged in the past 7 days. This can help preserve battery health and ensure readiness for colder periods. Triggered at a specific time and only if the production forecast and input season allow it. Experimental GoodWe Inverter integration is expected.
+
+### Entities
+**Time**
+- Time of start battery charging
+
+**Count of 100% Battery State in a Week**
+- Sensor which holds count of 100% battery charges in last 7 days based on history stats
+- Available for example after defining in **configuration.yaml** file or you can have your own sensor
+
+```YAML
+sensor:
+  - platform: history_stats
+    name: Count of 100% Battery State in a Week
+    entity_id: sensor.battery_state_of_charge
+    state: 100
+    type: count
+    start: "{{ now().replace(hour=0, minute=0, second=0) - timedelta(days=7) }}"
+    end: "{{ now() }}"
+```
+
+**PV Production Forecast**
+- Sensor ensuring daily forecast of PV production
+- Available from HA integrations like *Forecast.Solar* which is recommended approach. Eventually you may have access to another service as *Solcast* etc.
+
+**GoodWe Charging Power**
+- Target entity describing power of charging in eco charge mode
+- Part of GoodWe Inverter integration
+
+**GoodWe Final SoC Entity**
+- Target entity describing final value of battery charging (%)
+- Part of GoodWe Inverter integration
+
+**GoodWe Inverter Mode**
+- Target entity describing mode of the inverter
+- Part of GoodWe Inverter integration
+
+**GoodWe Soc Sensor**
+- Sensor containing actual State of Charge of the battery
+- Available directly in GoodWe Inverter integration
+
+[![Open your Home Assistant instance and show the blueprint import dialog with a specific blueprint pre-filled.](https://my.home-assistant.io/badges/blueprint_import.svg)](https://my.home-assistant.io/redirect/blueprint_import/?blueprint_url=https%3A%2F%2Fgithub.com%2Fjan-trnka%2Fhome-assistant-pv-system%2Fblob%2Fmain%2Fbattery_fully_charge.yaml)
+
+---
+
+## ❌ Disable Overflow
+
+Disables electricity overflow when the spot price of electricity is negative (i.e., Export Limit is set to 0). Once the spot price becomes positive again, it restores the Export Limit to its original value.  Experimental GoodWe Inverter integration is expected.
+
+### Entities
+**Energy Spot Price**
+- Actual energy spot price
+- Data available from national electricity markets, often also as HA integrations (Nordpool, EPEX, Czech Energy Spot Prices, ...)
+
+**GoodWe Export Limit**
+- Target entity describing value of allowed export limit
+- Available directly in GoodWe Inverter integration
+
+**Export Limit Value**
+- Numeric value of the original export limit (W) which is set when the price is positive again
+
+[![Open your Home Assistant instance and show the blueprint import dialog with a specific blueprint pre-filled.](https://my.home-assistant.io/badges/blueprint_import.svg)](https://my.home-assistant.io/redirect/blueprint_import/?blueprint_url=https%3A%2F%2Fgithub.com%2Fjan-trnka%2Fhome-assistant-pv-system%2Fblob%2Fmain%2Fdisable_overflow.yaml)
+
+---
+
 ## 💰 Eco Discharge When Low Price at Noon
 
 Checks conditions at specified time (PV prediction, energy prices) and sets eco discharge mode in the morning (moves the overflows from the afternoon to the morning) by script, then sets general mode again when price is low enough. Ideal in spring or autumn period when energy prices are different during the day. Experimental GoodWe Inverter integration is expected.
@@ -218,72 +285,7 @@ input_number:
 - Sensor containing actual State of Charge of the battery
 - Available directly in GoodWe Inverter integration
 
----
-
-## 🔁 Fully Charge Battery Once a Week
-
-Ensures that the battery is fully charged at least once a week during winter, if it hasn't been fully charged in the past 7 days. This can help preserve battery health and ensure readiness for colder periods. Triggered at a specific time and only if the production forecast and input season allow it. Experimental GoodWe Inverter integration is expected.
-
-### Entities
-**Time**
-- Time of start battery charging
-
-**Count of 100% Battery State in a Week**
-- Sensor which holds count of 100% battery charges in last 7 days based on history stats
-- Available for example after defining in **configuration.yaml** file or you can have your own sensor
-
-```YAML
-sensor:
-  - platform: history_stats
-    name: Count of 100% Battery State in a Week
-    entity_id: sensor.battery_state_of_charge
-    state: 100
-    type: count
-    start: "{{ now().replace(hour=0, minute=0, second=0) - timedelta(days=7) }}"
-    end: "{{ now() }}"
-```
-
-**PV Production Forecast**
-- Sensor ensuring daily forecast of PV production
-- Available from HA integrations like *Forecast.Solar* which is recommended approach. Eventually you may have access to another service as *Solcast* etc.
-
-**GoodWe Charging Power**
-- Target entity describing power of charging in eco charge mode
-- Part of GoodWe Inverter integration
-
-**GoodWe Final SoC Entity**
-- Target entity describing final value of battery charging (%)
-- Part of GoodWe Inverter integration
-
-**GoodWe Inverter Mode**
-- Target entity describing mode of the inverter
-- Part of GoodWe Inverter integration
-
-**GoodWe Soc Sensor**
-- Sensor containing actual State of Charge of the battery
-- Available directly in GoodWe Inverter integration
-
-[![Open your Home Assistant instance and show the blueprint import dialog with a specific blueprint pre-filled.](https://my.home-assistant.io/badges/blueprint_import.svg)](https://my.home-assistant.io/redirect/blueprint_import/?blueprint_url=https%3A%2F%2Fgithub.com%2Fjan-trnka%2Fhome-assistant-pv-system%2Fblob%2Fmain%2Fbattery_fully_charge.yaml)
-
----
-
-## ❌ Disable Overflow
-
-Disables electricity overflow when the spot price of electricity is negative (i.e., Export Limit is set to 0). Once the spot price becomes positive again, it restores the Export Limit to its original value.  Experimental GoodWe Inverter integration is expected.
-
-### Entities
-**Energy Spot Price**
-- Actual energy spot price
-- Data available from national electricity markets, often also as HA integrations (Nordpool, EPEX, Czech Energy Spot Prices, ...)
-
-**GoodWe Export Limit**
-- Target entity describing value of allowed export limit
-- Available directly in GoodWe Inverter integration
-
-**Export Limit Value**
-- Numeric value of the original export limit (W) which is set when the price is positive again
-
-[![Open your Home Assistant instance and show the blueprint import dialog with a specific blueprint pre-filled.](https://my.home-assistant.io/badges/blueprint_import.svg)](https://my.home-assistant.io/redirect/blueprint_import/?blueprint_url=https%3A%2F%2Fgithub.com%2Fjan-trnka%2Fhome-assistant-pv-system%2Fblob%2Fmain%2Fdisable_overflow.yaml)
+[![Open your Home Assistant instance and show the blueprint import dialog with a specific blueprint pre-filled.](https://my.home-assistant.io/badges/blueprint_import.svg)](https://my.home-assistant.io/redirect/blueprint_import/?blueprint_url=https%3A%2F%2Fgithub.com%2Fjan-trnka%2Fhome-assistant-goodwe-pv-control%2Fblob%2Fmain%2Feco_discharge_when_low_price.yaml)
 
 ---
 
