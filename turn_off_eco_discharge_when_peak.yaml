@@ -18,8 +18,8 @@ blueprint:
           filter:
             domain: sensor
     goodwe_mode:
-      name: GoodWe Mode
-      description: Entity describing mode of the inverter
+      name: GoodWe Inverter Mode
+      description: Target entity describing mode of the inverter
       selector:
         entity:
           filter:

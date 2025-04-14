@@ -4,7 +4,7 @@ blueprint:
   domain: automation
   input:
     goodwe_dod_target:
-      name: DoD Entity
+      name: GoodWe DoD Entity
       description: The target entity which sets depth of discharge of the battery
       selector:
         target:
@@ -13,7 +13,7 @@ blueprint:
             integration: goodwe
     production_forecast:
       name: PV Production Forecast
-      description: Forecast of today's pv production
+      description: Forecast of today's PV production
       selector:
         entity:
           filter:
@@ -64,24 +64,25 @@ variables:
   pv_prediction: !input production_forecast
   capacity: !input capacity
   average_consumption: !input average_consumption
+  calculated_dod_value: >-
+    {% set pv_prediction = states(pv_prediction) | float(default=0) %}
+    {% set capacity = states(capacity) | float(default=1) %}
+    {% set consumption = states(average_consumption) | float(default=0) / 24 * 5 %}
+    {% set winter_dod = states(winter_dod) | float(default=0) %}
+    {% set result = 100 * (pv_prediction - consumption) / capacity | round(1, default=0) %}
+
+    {% if result < winter_dod %}
+      {{ winter_dod | int }}
+    {% elif result > 80 %}
+      {{ 80 }}
+    {% else %}
+      {{ result | int }}
+    {% endif %}
 actions:
   - action: number.set_value
     target: !input goodwe_dod_target
     data:
-      value_template: >-
-        {% set pv_prediction = states(pv_prediction) | float(default=0) %}
-        {% set capacity = states(capacity) | float(default=1) %}
-        {% set consumption = states(average_consumption) | float(default=0) / 24 * 5 %}
-        {% set winter_dod = states(winter_dod) | float(default=0) %}
-        {% set result = 100 * (pv_power - consumption) / capacity | round(1, default=0) %}
-
-        {% if result < winter_dod %}
-          {{ winter_dod | int }}
-        {% elif result > 80 %}
-          {{ 80 }}
-        {% else %}
-          {{ result | int }}
-        {% endif %}
+      value: "{{ calculated_dod_value }}"
   - sequence:
     - wait_for_trigger:
       - value_template: '{% set SoC = states(actual_soc)

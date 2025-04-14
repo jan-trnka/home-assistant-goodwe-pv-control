@@ -8,16 +8,23 @@ blueprint:
       description: Time of start battery charging
       selector:
         time:
+    count_charges:
+      name: Count of 100% Battery State in a Week
+      description: Sensor which holds count of 100% battery charges in last 7 days
+      selector:
+        entity:
+          filter:
+            domain: sensor
     production_forecast:
-      name: Production Forecast
-      description: Forecast of today's production
+      name: PV Production Forecast
+      description: Forecast of today's PV production
       selector:
         entity:
           filter:
             domain: sensor
     goodwe_power:
       name: GoodWe Charging Power
-      description: The target entity describing power of eco charging mode
+      description: Target entity describing power of charging in eco charge mode
       selector:
         target:
           entity:
@@ -25,15 +32,15 @@ blueprint:
             integration: goodwe
     goodwe_final_soc:
       name: GoodWe Final SoC Entity
-      description: The target entity describing final value of battery charging
+      description: Target entity describing final value of battery charging
       selector:
         target:
           entity:
             domain: number
             integration: goodwe
     goodwe_mode:
-      name: GoodWe Mode
-      description: Entity describing mode of the inverter
+      name: GoodWe Inverter Mode
+      description: Target entity describing mode of the inverter
       selector:
         target:
           entity:
@@ -52,9 +59,9 @@ triggers:
   - trigger: time
     at: !input time
 conditions:
-  - condition: state
-    entity_id: binary_sensor.battery_was_fully_charged_in_last_week
-    state: 'off'
+  - condition: numeric_state
+    entity_id: !input count_charges
+    below: 1
   - condition: numeric_state
     entity_id: !input production_forecast
     below: input_number.threshold_for_changing_dod
@@ -84,4 +91,14 @@ actions:
       target: !input goodwe_mode
       data:
         option: general
+    - delay: 00:00:05
+    - action: number.set_value
+      target: !input goodwe_power
+      data:
+        value: 0
+    - delay: 00:00:05
+    - action: number.set_value
+      target: !input goodwe_final_soc
+      data:
+        value: 0
 mode: single

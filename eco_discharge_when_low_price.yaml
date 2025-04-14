@@ -1,0 +1,213 @@
+blueprint:
+  name: Eco Discharge When Low Price at Noon
+  description: Checks conditions at specified time (PV prediction, energy prices) and sets eco discharge mode in the morning (moves the overflows from the afternoon to the morning) by script, then sets general mode again when price is low enough
+  domain: automation
+  input:
+    time:
+      name: Time
+      description: Conditions check time (start automation)
+      selector:
+        time:
+    production_forecast:
+      name: PV Production Forecast
+      description: Forecast of today's PV production
+      selector:
+        entity:
+          filter:
+            domain: sensor
+    average_consumption:
+      name: Average Daily House Consumption
+      description: Average house consumpiton in last week
+      selector:
+        entity:
+          filter:
+            domain: sensor
+    average_20_production:
+      name: Average PV Power Last 20 Minutes
+      description: Average value of the PV generation last 20 minutes
+      selector:
+        entity:
+          filter:
+            domain: sensor
+    average_20_consumption:
+      name: Average House Consumption Last 20 Minutes
+      description: Average value of the house consumption last 20 minutes
+      selector:
+        entity:
+          filter:
+            domain: sensor
+    spot_price:
+      name: Energy Spot Prices for the Day
+      description: |
+        Dictionary with hourly prices of energy
+        - Czech - current_spot_electricity_hour_order
+        - Nordpool - the only Nordpool entity,
+        default name is "nordpool_<energy_scale>_<region>_<currency>_<some-numbers>"
+      selector:
+        entity:
+          filter:
+            domain: sensor
+    is_cheapest_3_hours_block:
+      name: Actual Block of 3 Hours Energy Price Is Cheapest
+      description: Binary sensor defining the cheapest 3 hours block of energy spot price
+      selector:
+        entity:
+          filter:
+            domain: binary_sensor
+    capacity:
+      name: Battery Capacity
+      description: Capacity value of the battery
+      selector:
+        entity:
+          filter:
+            domain: input_number
+    goodwe_power:
+      name: GoodWe Discharging Power
+      description: Target entity describing power of discharging in eco discharge mode
+      selector:
+        target:
+          entity:
+            domain: number
+            integration: goodwe
+    goodwe_mode:
+      name: GoodWe Inverter Mode
+      description: Target entity describing mode of the inverter
+      selector:
+        target:
+          entity:
+            domain: select
+            integration: goodwe
+    goodwe_actual_soc:
+      name: GoodWe SoC Sensor
+      description: GoodWe actual state of charge sensor
+      selector:
+        entity:
+          filter:
+            domain: sensor
+            integration: goodwe
+
+variables:
+  prediction: !input production_forecast
+  avg_daily_consumption: !input average_consumption
+  avg_20_production: !input average_20_production
+  avg_20_consumption: !input average_20_consumption
+  spot_price: !input spot_price
+  is_cheapest: !input is_cheapest_3_hours_block
+  capacity: !input capacity
+  soc: !input goodwe_actual_soc
+  remaining_hours_to_charge: >-
+    {% set capacity = states(capacity) | float(default=0) %}
+    {% set soc = states(soc) | float(default=0) %}
+    {% set power = states(avg_20_production) | float(default=0) %}
+    {% set consumption = states(avg_20_consumption) | float(default=0) %}
+    {% set available_power = (power - consumption) / 1000 %}
+    {% set remaining_capacity = (100 - soc) / 100 * capacity %}
+
+    {% if available_power > 0 %}
+      {% set result = (remaining_capacity / available_power) | round(2) %}
+      {% if result > 0 and result < 10 %}
+        {{ result }}
+      {% else %}
+        {{ -1 }}
+      {% endif %}
+    {% else %}
+      {{ -1 }}
+    {% endif %}
+triggers:
+  - trigger: time
+    at: !input time
+conditions:
+  - condition: template
+    value_template: >-
+      {% set prediction = states(prediction) | float(default=0) %}
+      {% set avg_daily_consumption = states(avg_daily_consumption) | float(default=0) %}
+      {% set capacity = states(capacity) | float(default=0) %}
+      {{ prediction > 0.7*avg_daily_consumption + capacity }}
+  - condition: template
+    value_template: >-
+      {% set intervals = [(9, 12),(12, 15),] %}
+      {% set min = namespace(price=[], mor=[], aft=[]) %}
+
+      {% for interval in intervals %}
+        {% set min.price = [] %}
+
+        {% for i in range(interval[0], interval[1]) %}
+          {% set hour_dt = now().replace(hour=i, minute=0, second=0, microsecond=0) %}
+          {% set iso_hour = hour_dt.isoformat() %}
+
+          {% set attrs = state_attr(spot_price, 'raw_today') %}
+
+          {# 1. Nordpool #}
+          {% if attrs is not none %}
+            {% set hour_entry = attrs[i] %}
+            {% if hour_entry is not none %}
+              {% set value = hour_entry.value %}
+              {% set min.price = min.price + [value] %}
+            {% else %}
+              {% set value = none %}
+            {% endif %}
+          {# 2. Czech Energy Spot Price #}
+          {% else %}
+            {% set value = states.sensor.current_spot_electricity_hour_order.attributes.get(iso_hour) %}
+            {% set min.price = min.price + [value[1]] %}
+          {% endif %}
+
+        {% endfor %}
+
+        {% if loop.index == 1 %}
+          {% set min.mor = min.price %}
+        {% else %}
+          {% set min.aft = min.price %}
+        {% endif %}
+
+      {% endfor %}
+      
+      {% set price_morning = min.mor | sum / min.mor | length %}
+      {% set price_afternoon = min.aft | sum / min.aft | length %}
+
+      {% if price_afternoon >= 0 %}
+        {{ price_morning > 2 * price_afternoon }}
+      {% else %}
+        {{ price_morning > (-1) * price_afternoon }}
+      {% endif %}
+  - condition: state
+    entity_id: input_select.season
+    state: Spring/Autumn
+actions:
+  - sequence:
+    - wait_template: >-
+        {% set production = states(avg_20_production) | float(default=0) %}
+        {% set consumption = states(avg_20_consumption) | float(default=0) %}
+        {% set soc = states(soc) | float(default=0) %}
+        {{ production > 2 * consumption and soc > 25 }}
+      timeout: 04:00:00
+      continue_on_timeout: false
+    - action: number.set_value
+      target: !input goodwe_power
+      data:
+        value: 1
+    - delay: 00:00:05
+    - action: select.select_option
+      target: !input goodwe_mode
+      data:
+        option: eco_discharge
+    - sequence:
+      - wait_template: >-
+          {% set estimated_minutes = remaining_hours_to_charge * 60 %}
+          {% set stop_time = as_timestamp(now()) + estimated_minutes %}
+          {% set formatted_stop_time = stop_time | timestamp_custom('%H:%M', true, default='23:59:00') %}
+          {% set now = as_timestamp(now()) | timestamp_custom('%H:%M', true) %}
+          {% set is_cheapest_block = states(is_cheapest) %}
+          {{ (estimated_minutes >= 0 and formatted_stop_time > '16:00' and now > '11:00') or is_cheapest_block == 'on' }}
+        timeout: 03:00:00
+        continue_on_timeout: false
+      - action: select.select_option
+        target: !input goodwe_mode
+        data:
+          option: general
+      - delay: 00:00:05
+      - action: number.set_value
+        target: !input goodwe_power
+        data:
+          value: 0
+mode: single

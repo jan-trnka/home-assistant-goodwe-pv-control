@@ -11,7 +11,7 @@ blueprint:
           filter:
             domain: sensor
     goodwe_entity:
-      name: Export Limit
+      name: GoodWe Export Limit
       description: Inverter export limit target entity
       selector:
         target:
@@ -19,8 +19,8 @@ blueprint:
             domain: number
             integration: goodwe
     limit_value:
-      name: Export Limit Number
-      description: Value of the original export limit (W)
+      name: Export Limit Value
+      description: Numeric value of the original export limit (W) which is set when the price is positive again
       selector:
         number:
           min: 0

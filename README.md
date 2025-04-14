@@ -106,6 +106,120 @@ input_number:
 
 ---
 
+## 💰 Eco Discharge When Low Price at Noon
+
+Checks conditions at specified time (PV prediction, energy prices) and sets eco discharge mode in the morning (moves the overflows from the afternoon to the morning) by script, then sets general mode again when price is low enough. Ideal in spring or autumn period when energy prices are different during the day. Experimental GoodWe Inverter integration is expected.
+
+### Entities
+**Time**
+- Time when automation start - checks PV production prediction and spot prices for the day
+
+**PV Production Forecast**
+- Sensor ensuring daily forecast of PV production
+- Available from HA integrations like *Forecast.Solar* which is recommended approach. Eventually you may have access to another service as *Solcast* etc.
+
+**Average Daily House Consumption**
+- Sensor based on Final Daily House Consumption sensor which holds final value of consumption day before
+- Contains average daily house consumpiton in last 7 days
+- Available for example after defining in **configuration.yaml** file or you can have your own sensor
+
+```YAML
+sensor:
+  # statistics sensor for average daily house consumption in last week
+  - platform: statistics
+    unique_id: sensor.avg_daily_consumption
+    name: Average Daily Consumption
+    entity_id: sensor.final_daily_house_consumption
+    state_characteristic: mean
+    sampling_size: 7
+    max_age:
+      days: 7
+template:
+  # template sensor for checking final house consumption at the end of the day
+  - trigger:
+      - trigger: time
+        at: "23:59:55"
+    sensor:
+      - name: "Final Daily House Consumption"
+        state: >
+          {% set value = states('sensor.daily_house_consumption') | float(default=0) %}
+          {{ value*1 | round(1, default=0) }}
+        unit_of_measurement: "kWh"
+```
+
+**Average PV Power Last 20 Minutes**
+- Average value of the PV generation during last 20 minutes
+- Available for example after defining in **configuration.yaml** file or you can have your own sensor
+
+```YAML
+sensor:
+  - platform: statistics
+    unique_id: sensor.avg_power
+    name: "Average PV Production In Last 20 Minutes"
+    entity_id: sensor.pv_power
+    state_characteristic: mean
+    sampling_size: 240
+    max_age:
+      minutes: 20
+```
+
+**Average House Consumption Last 20 Minutes**
+- Average value of the house consumption during last 20 minutes
+- Available for example after defining in **configuration.yaml** file or you can have your own sensor
+
+```YAML
+sensor:
+  - platform: statistics
+    unique_id: sensor.avg_consumption
+    name: "Average Consumption In Last 20 Minutes"
+    entity_id: sensor.house_consumption
+    state_characteristic: mean
+    sampling_size: 240
+    max_age:
+      minutes: 20
+```
+
+**Energy Spot Prices for the Day**
+- Dictionary with hourly prices of energy
+    - Czech - current_spot_electricity_hour_order
+    - Nordpool - the only Nordpool entity, default name is "nordpool_<energy_scale>_<region>_<currency>_<some-numbers>"
+- Available by one of supported integrations (Czech Energy Spot Prices, Nordpool)
+
+**Actual Block of 3 Hours Energy Price Is Cheapest**
+- Binary sensor defining the cheapest 3 hours block of energy prices
+- Czech Energy Spot Prices - contains directly entity of that type
+- Nordpool - You have to manually config sensor of that type in **configuration.yaml** file
+
+**Battery Capacity**
+- Input number defining Battery Capacity
+- It's up on user which value is set
+- Available for example after defining in **configuration.yaml** file or you can have your own input number
+
+```YAML
+input_number:
+  battery_capacity:
+    name: Battery Capacity
+    icon: mdi:battery
+    min: 0
+    max: 30
+    unit_of_measurement: kWh
+    step: 0.1
+```
+
+**GoodWe Discharging Power**
+- Target entity describing power of discharging in eco discharge mode
+- Part of GoodWe Inverter integration
+
+**GoodWe Inverter Mode**
+- Target entity describing mode of the inverter
+- Part of GoodWe Inverter integration
+
+**GoodWe Soc Sensor**
+- Sensor containing actual State of Charge of the battery
+- Available directly in GoodWe Inverter integration
+
+---
+
 ## 🔁 Fully Charge Battery Once a Week
 
 Ensures that the battery is fully charged at least once a week during winter, if it hasn't been fully charged in the past 7 days. This can help preserve battery health and ensure readiness for colder periods. Triggered at a specific time and only if the production forecast and input season allow it. Experimental GoodWe Inverter integration is expected.
@@ -134,7 +248,7 @@ sensor:
 - Available from HA integrations like *Forecast.Solar* which is recommended approach. Eventually you may have access to another service as *Solcast* etc.
 
 **GoodWe Charging Power**
-- Target entity describing power of charging in eco charging mode
+- Target entity describing power of charging in eco charge mode
 - Part of GoodWe Inverter integration
 
 **GoodWe Final SoC Entity**
