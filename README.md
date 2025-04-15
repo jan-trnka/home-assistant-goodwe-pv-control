@@ -6,10 +6,10 @@ This repository contains a set of Home Assistant blueprints designed to automate
 
 ## Prerequisites
 
-**GoodWe Inverter**
-The main prerequisite for use this set of blueprints is **GoodWe Inverter** integration available at https://www.home-assistant.io/integrations/goodwe/ which is native Home Assistant integration. Most of the blueprints assume **experimental** version of that integration available at https://github.com/mletenay/home-assistant-goodwe-inverter as a HACS component. Details are mentioned in each blueprint documentation.
+### GoodWe Inverter
+The main prerequisite for use this set of blueprints is solar system within Goodwe inverter, baterry system and Home Assistant **GoodWe Inverter** integration available at https://www.home-assistant.io/integrations/goodwe/ which is native Home Assistant integration. Most of the blueprints assume **experimental** version of that integration available at https://github.com/mletenay/home-assistant-goodwe-inverter as a HACS component. Details are mentioned in each blueprint documentation.
 
-**Input Season**
+### Input Season
 The blueprints expect that the current season is set to know which scenarios are usable. To define this input select, you as a user can use code below and copy it to **configuration.yaml** file.
 
 ```YAML
