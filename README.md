@@ -37,6 +37,10 @@ Automatically adjusts the Depth of Discharge (DoD) of the battery based on today
 - Sensor ensuring daily forecast of PV production
 - Available from HA integrations like *Forecast.Solar* which is recommended approach. Eventually you may have access to another service as *Solcast* etc.
 
+**Threshold for Changing DoD**
+- Number specifiying the PV production prediction value that must be met to start automation (kWh)
+- If Prediction is bigger than this value, automation starts, checks other conditions and sets DoD to the new value
+
 **Battery Capacity**
 - Input number defining Battery Capacity
 - It's up on user which value is set
