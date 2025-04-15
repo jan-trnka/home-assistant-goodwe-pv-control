@@ -1,6 +1,6 @@
 # ☀️ Home Assistant Blueprints for GoodWe Photovoltaic Systems
 
-This repository contains a set of Home Assistant blueprints designed to automate and optimize residential photovoltaic systems equipped with **GoodWe inverters**. These automations focus on smart battery management, solar forecast adaptation, and energy optimization tailored to users with solar and battery installations.
+This repository contains a set of Home Assistant blueprints designed to automate and optimize residential photovoltaic systems equipped with **GoodWe inverters**. These automations focus on smart battery management, solar forecast adaptation and energy optimization tailored to users with solar and battery installations in order to reduce energy costs.
 
 ---
 
@@ -10,7 +10,7 @@ This repository contains a set of Home Assistant blueprints designed to automate
 The main prerequisite for use this set of blueprints is **GoodWe Inverter** integration available at https://www.home-assistant.io/integrations/goodwe/ which is native Home Assistant integration. Most of the blueprints assume **experimental** version of that integration available at https://github.com/mletenay/home-assistant-goodwe-inverter as a HACS component. Details are mentioned in each blueprint documentation.
 
 **Input Season**
-The blueprints expect that the current season is set to know which scenarios are usable. To define this input select, you as a user can use code below and copy it to **congiguration.yaml** file.
+The blueprints expect that the current season is set to know which scenarios are usable. To define this input select, you as a user can use code below and copy it to **configuration.yaml** file.
 
 ```YAML
 input_select:
@@ -250,7 +250,7 @@ sensor:
 - Dictionary with hourly prices of energy
     - Czech - current_spot_electricity_hour_order
     - Nordpool - the only Nordpool entity, default name is "nordpool_<energy_scale>_<region>_<currency>_<some-numbers>"
-- Available by one of supported integrations (Czech Energy Spot Prices, Nordpool)
+- Available by one of the supported integrations (Czech Energy Spot Prices, Nordpool)
 
 **Actual Block of 3 Hours Energy Price Is Cheapest**
 - Binary sensor defining the cheapest 3 hours block of energy prices
