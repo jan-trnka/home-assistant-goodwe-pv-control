@@ -18,6 +18,16 @@ blueprint:
         entity:
           filter:
             domain: sensor
+    threshold_for_changing_dod:
+      name: Threshold for Changing DoD
+      description: Specifies the PV production prediction value that must be met to start automation (kWh)
+      selector:
+        number:
+          max: 50
+          min: 0
+          step: 1
+          unit_of_measurement: kWh
+          mode: slider
     capacity:
       name: Battery Capacity
       description: Capacity value of the battery
@@ -53,8 +63,8 @@ triggers:
     at: 06:00:00
 conditions:
   - condition: numeric_state
-    entity_id: sensor.energy_production_today
-    above: input_number.threshold_for_changing_dod
+    entity_id: !input production_forecast 
+    above: !input threshold_for_changing_dod
   - condition: state
     entity_id: input_select.season
     state: Winter
