@@ -27,7 +27,7 @@ input_select:
 
 ## 🔋 Auto Set DoD
 
-Automatically adjusts the Depth of Discharge (DoD) of the battery based on today's solar production forecast and your typical energy consumption. It ensures conservative discharge during low production periods (e.g., winter), while allowing deeper discharge during expected sunny days. The basic GoodWe Inverter integration is expected.
+Automatically adjusts the Depth of Discharge (DoD) of the battery based on today's solar production forecast and your typical energy consumption. It ensures conservative discharge during low production periods (e.g., winter), while allowing deeper discharge during expected sunny days. Standard winter DoD value is set when SoC (state of charge) drops down to that value. The basic GoodWe Inverter integration is expected.
 
 ### Entities
 **GoodWe DoD Entity**
@@ -175,7 +175,7 @@ Disables electricity overflow when the spot price of electricity is negative (i.
 
 ## 💰 Eco Discharge When Low Price at Noon
 
-Checks conditions at specified time (PV prediction, energy prices) and sets eco discharge mode in the morning (moves the overflows from the afternoon to the morning) by script, then sets general mode again when price is low enough. Ideal in spring or autumn period when energy prices are different during the day. Experimental GoodWe Inverter integration is expected.
+Checks conditions at specified time (PV prediction, energy prices) and sets eco discharge mode in the morning (moves the overflows from the afternoon to the morning) by script, then sets general mode again when price is low enough (block of 3 consecutive hours is the cheapest) or if the time to full charge of battery is too long. Ideal in spring or autumn period when energy prices are different during the day. Experimental GoodWe Inverter integration is expected.
 
 ### Entities
 **Time**
