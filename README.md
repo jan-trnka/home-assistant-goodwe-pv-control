@@ -159,7 +159,7 @@ sensor:
 
 ## ❌ Disable Overflow
 
-Disables electricity overflow when the spot price of electricity is negative (i.e., Export Limit is set to 0). Once the spot price becomes positive again, it restores the Export Limit to its original value.  Experimental GoodWe Inverter integration is expected.
+Disables electricity overflow when the spot price of electricity is negative (i.e., Export Limit is set to 0). Once the spot price becomes positive again, it restores the Export Limit to its original value. The basic GoodWe Inverter integration is expected.
 
 ### Entities
 **Energy Spot Price**
