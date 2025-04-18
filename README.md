@@ -170,8 +170,17 @@ Disables electricity overflow when the spot price of electricity is negative (i.
 - Target entity describing value of allowed export limit
 - Available directly in GoodWe Inverter integration
 
-**Export Limit Value**
+**Export Limit Value (W)**
 - Numeric value of the original export limit (W) which is set when the price is positive again
+- Set this value if your Export Limit entity uses WATTS
+- Value in % left unchanged
+- If you don't set this value even if your Export Limit entity uses Watts, default value is 10000 W
+
+**Export Limit Value (%)**
+- Numeric value of the original export limit (%) which is set when the price is positive again
+- Set this value if your Export Limit entity uses PERCENTAGE
+- Value in Watts left unchanged
+- If you don't set this value even if your Export Limit entity uses percentage, default value is 100 %
 
 [![Open your Home Assistant instance and show the blueprint import dialog with a specific blueprint pre-filled.](https://my.home-assistant.io/badges/blueprint_import.svg)](https://my.home-assistant.io/redirect/blueprint_import/?blueprint_url=https%3A%2F%2Fgithub.com%2Fjan-trnka%2Fhome-assistant-pv-system%2Fblob%2Fmain%2Fdisable_overflow.yaml)
 
