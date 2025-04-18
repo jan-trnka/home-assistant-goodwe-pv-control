@@ -18,24 +18,47 @@ blueprint:
           entity:
             domain: number
             integration: goodwe
-    limit_value:
-      name: Export Limit Value
-      description: Numeric value of the original export limit (W) which is set when the price is positive again
+    limit_value_W:
+      name: Export Limit Value (W)
+      description: |
+        Numeric value of the original export limit (W) which is set when the price is positive again
+        - set this value if your Export Limit entity uses WATTS
+        - value in % left unchanged
+        - if you don't set this value even if your Export Limit entity uses Watts, default value is 10000 W
+      default: 10000
       selector:
         number:
           min: 0
-          max: 15000
+          max: 30000
           step: 100
-          unit_of_measurement: W
+          unit_of_measurement: 'W'
+          mode: slider
+    limit_value_percentage:
+      name: Export Limit Value (%)
+      description: |
+        Numeric value of the original export limit (%) which is set when the price is positive again
+        - set this value if your Export Limit entity uses PERCENTAGE
+        - value in Watts left unchanged
+        - if you don't set this value even if your Export Limit entity uses percentage, default value is 100 %
+      default: 100
+      selector:
+        number:
+          min: 0
+          max: 100
+          step: 1
+          unit_of_measurement: '%'
           mode: slider
 
+variables:
+  spot_price: !input spot_price
+  target_entity: !input goodwe_entity
+  limit_W: !input limit_value_W
+  limit_per: !input limit_value_percentage
 triggers:
   - trigger: numeric_state
     entity_id: !input spot_price
     below: 0
 conditions: []
-variables:
-  spot_price: !input spot_price
 actions:
   - action: number.set_value
     target: !input goodwe_entity
@@ -46,5 +69,16 @@ actions:
     - action: number.set_value
       target: !input goodwe_entity
       data:
-        value: !input limit_value
+        value_template: >-
+          {% set entity_id = target_entity.entity_id %}
+          {% set unit = state_attr(entity_id, 'unit_of_measurement') %}
+          {% set value_W = limit_W %}
+          {% set value_per = limit_per %}
+          {% if unit == 'W' %}
+            {{ value_W }}
+          {% elif unit == '%' %}
+            {{ value_per }}
+          {% else %}
+            {{ none }}
+          {% endif %}
 mode: single
