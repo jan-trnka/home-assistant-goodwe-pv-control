@@ -259,6 +259,10 @@ sensor:
       minutes: 20
 ```
 
+**Energy Spot Price**
+- Actual energy spot price
+- Data available from national electricity markets, often also as HA integrations (Nordpool, EPEX, Czech Energy Spot Prices, ...)
+
 **Energy Spot Prices for the Day**
 - Dictionary with hourly prices of energy
     - Czech - current_spot_electricity_hour_order
