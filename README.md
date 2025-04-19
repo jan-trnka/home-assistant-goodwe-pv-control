@@ -112,7 +112,7 @@ input_number:
 
 ## 🔁 Fully Charge Battery Once a Week
 
-Ensures that the battery is fully charged at least once a week during winter, if it hasn't been fully charged in the past 7 days. This can help preserve battery health and ensure readiness for colder periods. Triggered at a specific time and only if the production forecast and input season allow it. Experimental GoodWe Inverter integration is expected.
+Ensures that the battery is fully charged at least once a week during winter, if it hasn't been fully charged in the past 7 days. This can help preserve battery health and ensure readiness for colder periods. Triggered at a specific time and only if the production forecast and input season allow it. Experimental GoodWe Inverter integration is expected. This blueprint is usable in case you DON'T buy electricity on spot mode because of fixed trigger time.
 
 ### Entities
 **Time**
