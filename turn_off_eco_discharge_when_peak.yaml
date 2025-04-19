@@ -1,6 +1,6 @@
 blueprint:
   name: Turn Off Eco Discarge Mode When Peak
-  description: 'Turns off eco discharge mode when consumpiton is bigger than production'
+  description: "Turns off eco discharge mode when consumpiton is bigger than production"
   domain: automation
   input:
     consumption:
@@ -26,15 +26,14 @@ blueprint:
             domain: select
             integration: goodwe
 
-
 triggers:
-- trigger: numeric_state
-  entity_id: !input consumption
-  for:
-    hours: 0
-    minutes: 0
-    seconds: 15
-  above: !input pv_power
+  - trigger: numeric_state
+    entity_id: !input consumption
+    for:
+      hours: 0
+      minutes: 0
+      seconds: 15
+    above: !input pv_power
 conditions:
   - condition: state
     entity_id: !input goodwe_mode

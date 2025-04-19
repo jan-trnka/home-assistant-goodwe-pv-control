@@ -37,6 +37,13 @@ blueprint:
           filter:
             domain: sensor
     spot_price:
+      name: Energy Spot Price
+      description: Actual energy spot price entity
+      selector:
+        entity:
+          filter:
+            domain: sensor
+    spot_price_dict:
       name: Energy Spot Prices for the Day
       description: |
         Dictionary with hourly prices of energy
@@ -92,6 +99,7 @@ variables:
   avg_20_production: !input average_20_production
   avg_20_consumption: !input average_20_consumption
   spot_price: !input spot_price
+  spot_price_dict: !input spot_price_dict
   is_cheapest: !input is_cheapest_3_hours_block
   capacity: !input capacity
   soc: !input goodwe_actual_soc
@@ -135,7 +143,7 @@ conditions:
           {% set hour_dt = now().replace(hour=i, minute=0, second=0, microsecond=0) %}
           {% set iso_hour = hour_dt.isoformat() %}
 
-          {% set attrs = state_attr(spot_price, 'raw_today') %}
+          {% set attrs = state_attr(spot_price_dict, 'raw_today') %}
 
           {# 1. Nordpool #}
           {% if attrs is not none %}
@@ -198,7 +206,8 @@ actions:
           {% set formatted_stop_time = stop_time | timestamp_custom('%H:%M', true, default='23:59:00') %}
           {% set now = as_timestamp(now()) | timestamp_custom('%H:%M', true) %}
           {% set is_cheapest_block = states(is_cheapest) %}
-          {{ (estimated_minutes >= 0 and formatted_stop_time > '16:00' and now > '11:00') or is_cheapest_block == 'on' }}
+          {% set actual_spot_price = states(spot_price) | float(default=0) %}
+          {{ (estimated_minutes >= 0 and formatted_stop_time > '16:00' and now > '11:00') or is_cheapest_block == 'on' or actual_spot_price < 0.0 }}
         timeout: 03:00:00
         continue_on_timeout: false
       - action: select.select_option
