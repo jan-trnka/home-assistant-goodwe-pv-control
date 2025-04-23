@@ -1,0 +1,97 @@
+blueprint:
+  name: Time to Use Overflow
+  description: 'Indicates the right time to start using electricity overflow with switch.'
+  domain: automation
+  input:
+    goodwe_actual_soc:
+      name: GoodWe SoC Sensor
+      description: GoodWe actual state of charge sensor
+      selector:
+        entity:
+          filter:
+            domain: sensor
+            integration: goodwe
+    spot_price:
+      name: Energy Spot Price (for kWh)
+      description: Actual energy spot price entity for kWh
+      selector:
+        entity:
+          filter:
+            domain: sensor
+    max_price:
+      name: Maximal Energy Price (for kWh)
+      description: |
+        Value of threshold for maximal energy price for kWh for self-using overflow.
+        If actual energy spot price is higher than this value, automation does not start
+        and overflow is sold to the grid.
+      selector:
+        number:
+          max: 100
+          min: 0
+          step: 0.1
+          mode: box
+    average_20_production:
+      name: Average PV Power Last 20 Minutes
+      description: Average value of the PV generation last 20 minutes
+      selector:
+        entity:
+          filter:
+            domain: sensor
+    average_20_consumption:
+      name: Average House Consumption Last 20 Minutes
+      description: Average value of the house consumption last 20 minutes
+      selector:
+        entity:
+          filter:
+            domain: sensor
+    target_switch:
+      name: Target Switch Indicating Time to Use Overflow
+      description: If the switch is turned on, it is the right time to start using overflow.
+      selector:
+        target:
+          entity:
+            domain: input_boolean
+
+variables:
+  price: !input spot_price
+  max_price: !input max_price
+  avg_power: !input average_20_production
+  avg_consumption: !input average_20_consumption
+triggers:
+- trigger: numeric_state
+  entity_id: !input goodwe_actual_soc
+  above: 99
+conditions:
+- condition: template
+  value_template: >-
+    {% set season = states("input_select.season") | string %}
+
+    {{ season == "Spring/Autumn" or season == "Summer" }}
+actions:
+  - sequence:
+    - wait_template: >-
+        {% set spot_price = states(price) | float(default=0) %}
+        {% set max_spot_price = max_price %}
+        {% set average_production = states(avg_power) | float(default=0) %}
+        {% set average_consumption = states(avg_consumption) | float(default=0) %}
+
+        {{ spot_price < max_spot_price and average_production > 3 * average_consumption }}
+      timeout: 05:00:00
+    - action: input_boolean.turn_on
+      metadata: {}
+      data: {}
+      target: !input target_switch
+  - sequence:
+    - wait_template: >-
+        {% set spot_price = states(price) | float(default=0) %}
+        {% set max_spot_price = max_price %}
+        {% set average_production = states(avg_power) | float(default=0) %}
+        {% set average_consumption = states(avg_consumption) | float(default=0) %}
+
+        {{ spot_price > max_spot_price or average_production < 3 * average_consumption }}
+      timeout: 05:00:00
+    - action: input_boolean.turn_off
+      metadata: {}
+      data: {}
+      target: !input target_switch
+mode: single
