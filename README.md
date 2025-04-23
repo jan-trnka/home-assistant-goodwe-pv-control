@@ -306,7 +306,7 @@ input_number:
 
 ---
 
-## ⏱️ Time for Use Overflow
+## ⏱️ Time to Use Overflow
 
 This blueprint monitors battery state of charge, spot electricity price, and the balance between solar production and household consumption. When the battery is full, the spot price is below a defined threshold, and production significantly exceeds consumption, it turns on a switch to indicate it's the right time to use electricity overflow (e.g., to power controllable devices). The switch turns off again when conditions are no longer met. The basic GoodWe Inverter integration is expected.
 
@@ -355,8 +355,8 @@ sensor:
       minutes: 20
 ```
 
-**Target Switch Indicating Time for Use Overflow**
-- If the switch is turned on, it is the right time for start using overflow.
+**Target Switch Indicating Time to Use Overflow**
+- If the switch is turned on, it is the right time to start using overflow.
 - Available for example after defining in **configuration.yaml** file or you can have your own input boolean switch
 
 ```YAML
@@ -365,6 +365,8 @@ input_boolean:
     name: Time to Use Overflows
     icon: mdi:lightning-bolt-circle
 ```
+
+[![Open your Home Assistant instance and show the blueprint import dialog with a specific blueprint pre-filled.](https://my.home-assistant.io/badges/blueprint_import.svg)](https://my.home-assistant.io/redirect/blueprint_import/?blueprint_url=https%3A%2F%2Fgithub.com%2Fjan-trnka%2Fhome-assistant-goodwe-pv-control%2Fblob%2Fmain%2Ftime_for_overflow_use.yaml)
 
 ---
 
