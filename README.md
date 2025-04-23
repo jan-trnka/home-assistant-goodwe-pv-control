@@ -306,6 +306,68 @@ input_number:
 
 ---
 
+## ⏱️ Time for Use Overflow
+
+This blueprint monitors battery state of charge, spot electricity price, and the balance between solar production and household consumption. When the battery is full, the spot price is below a defined threshold, and production significantly exceeds consumption, it turns on a switch to indicate it's the right time to use electricity overflow (e.g., to power controllable devices). The switch turns off again when conditions are no longer met. The basic GoodWe Inverter integration is expected.
+
+### Entities
+**GoodWe Soc Sensor**
+- Sensor containing actual State of Charge of the battery
+- Available directly in GoodWe Inverter integration
+
+**Energy Spot Price**
+- Actual energy spot price
+- Data available from national electricity markets, often also as HA integrations (Nordpool, EPEX, Czech Energy Spot Prices, ...)
+
+**Maximal Energy Price (for kWh)**
+- Numeric value of threshold for the highest possible price for triggering automation (for kWh in currency of your energy price integration)
+- If actual energy spot price is higher than this value, automation does not start and overflow is sold to the grid
+
+**Average PV Power Last 20 Minutes**
+- Average value of the PV generation during last 20 minutes
+- Available for example after defining in **configuration.yaml** file or you can have your own sensor
+
+```YAML
+sensor:
+  - platform: statistics
+    unique_id: sensor.avg_power
+    name: "Average PV Production In Last 20 Minutes"
+    entity_id: sensor.pv_power
+    state_characteristic: mean
+    sampling_size: 240
+    max_age:
+      minutes: 20
+```
+
+**Average House Consumption Last 20 Minutes**
+- Average value of the house consumption during last 20 minutes
+- Available for example after defining in **configuration.yaml** file or you can have your own sensor
+
+```YAML
+sensor:
+  - platform: statistics
+    unique_id: sensor.avg_consumption
+    name: "Average Consumption In Last 20 Minutes"
+    entity_id: sensor.house_consumption
+    state_characteristic: mean
+    sampling_size: 240
+    max_age:
+      minutes: 20
+```
+
+**Target Switch Indicating Time for Use Overflow**
+- If the switch is turned on, it is the right time for start using overflow.
+- Available for example after defining in **configuration.yaml** file or you can have your own input boolean switch
+
+```YAML
+input_boolean:
+  time_to_use_overflows:
+    name: Time to Use Overflows
+    icon: mdi:lightning-bolt-circle
+```
+
+---
+
 ## ⚡ Turn Off Eco Discharge Mode When Peak
 
 This automation turns off the inverter’s eco discharge mode when consumption exceeds production. It helps in preventing excessive battery discharge when energy consumption is higher than the available solar production.
