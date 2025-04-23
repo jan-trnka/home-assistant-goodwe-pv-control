@@ -64,7 +64,7 @@ triggers:
 conditions:
 - condition: template
   value_template: >-
-    {% set season = states("input_select.season") | string(default="") %}
+    {% set season = states("input_select.season") | string %}
 
     {{ season == "Spring/Autumn" or season == "Summer" }}
 actions:
