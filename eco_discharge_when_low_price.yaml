@@ -131,7 +131,7 @@ conditions:
       {% set avg_daily_consumption = states(avg_daily_consumption) | float(default=0) %}
       {% set capacity = states(capacity) | float(default=0) %}
       {% set actual_soc = states(soc) | float(default=0) %}
-      {{ prediction > 0.7*avg_daily_consumption + (100-actual_soc)*capacity }}
+      {{ prediction > 0.7*avg_daily_consumption + (100-actual_soc)/100*capacity }}
   - condition: template
     value_template: >-
       {% set intervals = [(9, 12),(12, 15),] %}
