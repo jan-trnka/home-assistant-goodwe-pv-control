@@ -1,3 +1,7 @@
+# ------------------------------------------------------------------------------
+# Author: Jan Trnka
+# Created: 2025-03-01
+# ------------------------------------------------------------------------------
 blueprint:
   name: Fully Charge Battery Once a Week
   description: Charges battery to 100 % if wasn't charged during last week 

@@ -1,3 +1,7 @@
+# ------------------------------------------------------------------------------
+# Author: Jan Trnka
+# Created: 2025-03-09
+# ------------------------------------------------------------------------------
 blueprint:
   name: Disable Overflow
   description: 'Disables overflow when eletricity price is negative (Export Limit is set to 0). When the spot price is positive again, script sets Export Limit back to entered Value.'

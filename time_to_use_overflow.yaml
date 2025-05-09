@@ -1,3 +1,7 @@
+# ------------------------------------------------------------------------------
+# Author: Jan Trnka
+# Created: 2025-04-23
+# ------------------------------------------------------------------------------
 blueprint:
   name: Time to Use Overflow
   description: 'Indicates the right time to start using electricity overflow with switch.'
@@ -61,6 +65,9 @@ triggers:
 - trigger: numeric_state
   entity_id: !input goodwe_actual_soc
   above: 99
+- trigger: numeric_state
+  entity_id: sensor.current_spot_electricity_price
+  above: 0.0
 conditions:
 - condition: template
   value_template: >-
@@ -75,7 +82,7 @@ actions:
         {% set average_production = states(avg_power) | float(default=0) %}
         {% set average_consumption = states(avg_consumption) | float(default=0) %}
 
-        {{ spot_price < max_spot_price and average_production > 3 * average_consumption }}
+        {{ spot_price < max_spot_price and (average_production > 3 * average_consumption or spot_price < 0) }}
       timeout: 05:00:00
     - action: input_boolean.turn_on
       metadata: {}
@@ -88,10 +95,10 @@ actions:
         {% set average_production = states(avg_power) | float(default=0) %}
         {% set average_consumption = states(avg_consumption) | float(default=0) %}
 
-        {{ spot_price > max_spot_price or average_production < 3 * average_consumption }}
+        {{ spot_price > max_spot_price or (average_production < 3 * average_consumption and spot_price > 0) }}
       timeout: 05:00:00
     - action: input_boolean.turn_off
       metadata: {}
       data: {}
       target: !input target_switch
-mode: single
+mode: restart

@@ -1,3 +1,7 @@
+# ------------------------------------------------------------------------------
+# Author: Jan Trnka
+# Created: 2025-04-14
+# ------------------------------------------------------------------------------
 blueprint:
   name: Eco Discharge When Low Price at Noon
   description: Checks conditions at specified time (PV prediction, energy prices) and sets eco discharge mode in the morning (moves the overflows from the afternoon to the morning) by script, then sets general mode again when price is low enough
@@ -208,7 +212,7 @@ actions:
           {% set now = as_timestamp(now()) | timestamp_custom('%H:%M', true) %}
           {% set is_cheapest_block = states(is_cheapest) %}
           {% set actual_spot_price = states(spot_price) | float(default=0) %}
-          {{ (estimated_minutes >= 0 and formatted_stop_time > '16:00' and now > '11:00') or is_cheapest_block == 'on' or actual_spot_price < 0.0 }}
+          {{ (estimated_minutes >= 0 and formatted_stop_time > '16:00' and now > '11:00') or is_cheapest_block == 'on' or actual_spot_price < 0.1 }}
         timeout: 03:00:00
         continue_on_timeout: false
       - action: select.select_option

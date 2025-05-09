@@ -1,5 +1,9 @@
+# ------------------------------------------------------------------------------
+# Author: Jan Trnka
+# Created: 2025-04-06
+# ------------------------------------------------------------------------------
 blueprint:
-  name: Turn Off Eco Discarge Mode When Peak
+  name: Turn Off Eco Discharge Mode When Peak
   description: "Turns off eco discharge mode when consumpiton is bigger than production"
   domain: automation
   input:
@@ -17,6 +21,21 @@ blueprint:
         entity:
           filter:
             domain: sensor
+    goodwe_power:
+      name: GoodWe Discharging Power
+      description: Target entity describing power of discharging in eco discharge mode
+      selector:
+        entity:
+          filter:
+            domain: number
+            integration: goodwe
+    capacity:
+      name: Battery Capacity
+      description: Capacity value of the battery
+      selector:
+        entity:
+          filter:
+            domain: input_number
     goodwe_mode:
       name: GoodWe Inverter Mode
       description: Target entity describing mode of the inverter
@@ -26,14 +45,38 @@ blueprint:
             domain: select
             integration: goodwe
 
+variables:
+  power_per: !input goodwe_power
+  battery_capacity: !input capacity
+  cons: !input consumption
+  pv_power: !input pv_power
+  power_W: >-
+    {% set power_p = states(power_per) | float(default=0) %}
+    {% set capacity = states(battery_capacity) | float(default=0) * 1000 %}
+    {{ power_p * capacity / 100 }}
+trigger_variables:
+  power_per_trigger: !input goodwe_power
+  battery_capacity_trigger: !input capacity
+  cons_trigger: !input consumption
 triggers:
   - trigger: numeric_state
     entity_id: !input consumption
     for:
       hours: 0
       minutes: 0
-      seconds: 15
+      seconds: 30
     above: !input pv_power
+  - trigger: template
+    value_template: >-
+      {% set power_p = states(power_per_trigger) | float(default=0) %}
+      {% set capacity = states(battery_capacity_trigger) | float(default=0) * 1000 %}
+      {% set consumption = states(cons_trigger) | float(default=0) %}
+      {% set power_W_trigger = power_p * capacity / 100 %}
+      {{ consumption > power_W_trigger }}
+    for:
+      hours: 0
+      minutes: 0
+      seconds: 30
 conditions:
   - condition: state
     entity_id: !input goodwe_mode
@@ -44,4 +87,35 @@ actions:
       entity_id: !input goodwe_mode
     data:
       option: general
+  - sequence:
+    - wait_for_trigger:
+      - trigger: template
+        value_template: >-
+          {% set consumption = states(cons) | float(default=0) %}
+          {% set power = states(pv_power) | float(default=0) %}
+          {{ power > consumption }}
+        for:
+          hours: 0
+          minutes: 2
+      - trigger: template
+        value_template: >-
+          {% set consumption = states(cons) | float(default=0) %}
+          {{ power_W > consumption }}
+        for:
+          hours: 0
+          minutes: 2
+      timeout: 02:00:00
+      continue_on_timeout: false
+    - condition: state
+      entity_id: !input goodwe_mode
+      state: general
+    - condition: template
+      value_template: "{{ state_attr('automation.eco_discharge_when_low_price_at_noon',
+        'current') | int > 0 or\n   state_attr('automation.discharge_battery_to_the_grid',
+        'current') | int > 0 }}\n"
+    - action: select.select_option
+      target:
+        entity_id: !input goodwe_mode
+      data:
+        option: eco_discharge
 mode: single

@@ -1,0 +1,202 @@
+# ------------------------------------------------------------------------------
+# Author: Jan Trnka
+# Created: 2025-05-04
+# ------------------------------------------------------------------------------
+blueprint:
+  name: Discharge Battery to the Grid
+  description: During the most expensive hour in day checks conditions and turns on eco discharge mode - discharges battery with calculated power.
+  domain: automation
+  input:
+    spot_price:
+      name: Energy Spot Price
+      description: Actual energy spot price entity
+      selector:
+        entity:
+          filter:
+            domain: sensor
+    max_spot_price:
+      name: Daily Max of Spot Price
+      description: Maximum energy spot price in the day entity
+      selector:
+        entity:
+          filter:
+            domain: sensor
+    min_price:
+      name: Minimum Energy Price (for kWh)
+      description: |
+        Value of threshold for minimum energy price for kWh for selling energy to the grid.
+        If actual energy spot price is smaller than this value, automation does not start.
+      selector:
+        number:
+          max: 100
+          min: 0
+          step: 0.1
+          mode: box
+    production_forecast:
+      name: PV Production Forecast Tomorrow
+      description: Forecast of tomorrow's PV production
+      selector:
+        entity:
+          filter:
+            domain: sensor
+    prediction_threshold:
+      name: Prediction Threshold for Tomorrow
+      description: |
+        Specifies the PV tomorrow's production value that must be met to start automation (kWh).
+        It is the minimum value of tomorrow's production forecast to start the automation.
+      selector:
+        number:
+          max: 50
+          min: 0
+          step: 1
+          unit_of_measurement: kWh
+          mode: slider
+    goodwe_actual_soc:
+      name: GoodWe SoC Sensor
+      description: GoodWe actual state of charge sensor
+      selector:
+        entity:
+          filter:
+            domain: sensor
+            integration: goodwe
+    goodwe_dod:
+      name: GoodWe DoD Entity
+      description: The entity which sets depth of discharge of the battery
+      selector:
+        entity:
+          filter:
+            domain: number
+            integration: goodwe
+    capacity:
+      name: Battery Capacity
+      description: Capacity value of the battery
+      selector:
+        entity:
+          filter:
+            domain: input_number
+    avg_night_consumption:
+      name: Average Night Consumption
+      description: Value of average night consumption for estimating time of discharging battery
+      selector:
+        entity:
+          filter:
+            domain: sensor
+    consumption:
+      name: House Consumption
+      description: Sensor of actual house consumption
+      selector:
+        entity:
+          filter:
+            domain: sensor
+    goodwe_power:
+      name: GoodWe Discharging Power
+      description: Target entity describing power of discharging in eco discharge mode
+      selector:
+        target:
+          entity:
+            domain: number
+            integration: goodwe
+    goodwe_mode:
+      name: GoodWe Inverter Mode
+      description: Target entity describing mode of the inverter
+      selector:
+        target:
+          entity:
+            domain: select
+            integration: goodwe
+
+variables:
+  soc: !input goodwe_actual_soc
+  dod: !input goodwe_dod
+  capacity: !input capacity
+  avg_n_consumption: !input avg_night_consumption
+  consumption: !input consumption
+  suggested_power: >-
+    {% set soc = states(soc) | float(default=0) %}
+    {% set dod = states(dod) | float(default=0) %}
+    {% set capacity = states(capacity) | float(default=0) * 1000%}
+    {% set avg_consumption = states(avg_n_consumption) | float(default=0) %}
+    {% set now = now() %}
+    {% set target = now.replace(hour=9, minute=0, second=0, microsecond=0) + timedelta(days=1) %}
+    {% set hours_to_morning = (target - now).total_seconds() / 3600 | round(1) %}
+
+    {{ (soc-(100-dod))/100 * capacity - (avg_consumption*hours_to_morning) }}
+  power_percent: >-
+    {% set capacity = states(capacity) | float(default=0) * 1000 %}
+    
+    {% set result = 100 * suggested_power / capacity %}
+    {% if result > 0 and result < 40 %}
+      {{ result }}
+    {% else %}
+      {{ 0 }}
+    {% endif %}
+  remaining_hours_to_discharge: >-
+    {% set capacity = states(capacity) | float(default=0) %}
+    {% set soc = states(soc) | float(default=0) %}
+    {% set dod = states(dod) | float(default=0) %}
+    {% set consumption = states(avg_n_consumption) | float(default=0) / 1000 %}
+    {% set remaining_capacity = (soc - (100 - dod)) / 100 * capacity %}
+
+    {% set result = (remaining_capacity / consumption) | round(2) %}
+    {% if result > 0 and result < 30 %}
+      {{ result }}
+    {% else %}
+      {{ -1 }}
+    {% endif %}
+trigger_variables:
+  price: !input spot_price
+  max_price: !input max_spot_price
+trigger:
+  - trigger: template
+    value_template: >-
+      {% set price_value = states(price) | float(default=0) %}
+      {% set max_price_value = states(max_price) | float(default=0) %}
+
+      {{ price_value == max_price_value }}
+conditions:
+  - condition: numeric_state
+    entity_id: !input spot_price
+    above: !input min_price
+  - condition: numeric_state
+    entity_id: !input production_forecast
+    above: !input prediction_threshold
+  - condition: template
+    value_template: >-
+      {% set estimated_minutes = remaining_hours_to_discharge * 60 %}
+      {% set stop_time = as_timestamp(now()) + estimated_minutes %}
+      {% set formatted_stop_time = stop_time | timestamp_custom('%H:%M', true, default='00:00:00') %}
+
+      {{ estimated_minutes > 0 and formatted_stop_time > '09:00' }}
+  - condition: template
+    value_template: >-
+      {% set season = states("input_select.season") | string %}
+
+      {{ season == "Spring/Autumn" or season == "Summer" }}
+actions:
+  - sequence:
+    - wait_template: >-
+        {% set consumption = states(consumption) | float(default=0) %}
+        {% set power = suggested_power %}
+
+        {{ power > consumption }}
+      timeout: 00:01:00
+    - action: number.set_value
+      target: !input goodwe_power
+      data:
+        value: '{{ power_percent | round(1) }}'
+    - delay: 00:00:05
+    - action: select.select_option
+      target: !input goodwe_mode
+      data:
+        option: eco_discharge
+    - delay: 00:59:55
+    - action: select.select_option
+      target: !input goodwe_mode
+      data:
+        option: general
+    - delay: 00:00:05
+    - action: number.set_value
+      target: !input goodwe_power
+      data:
+        value: 0
+mode: single
