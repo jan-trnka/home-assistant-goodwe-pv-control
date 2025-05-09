@@ -1,6 +1,6 @@
 # ☀️ Home Assistant Blueprints for GoodWe Photovoltaic Systems
 
-This repository contains a set of Home Assistant blueprints designed to automate and optimize residential photovoltaic systems equipped with **GoodWe inverters**. These automations focus on smart battery management, solar forecast adaptation and energy optimization tailored to users with solar and battery installations in order to reduce energy costs.
+This repository contains a set of Home Assistant blueprints designed to automate and optimize residential photovoltaic systems equipped with **GoodWe inverters**. These automations focus on smart battery management, solar forecast adaptation and energy optimization tailored to users with solar and battery installations in order to reduce energy costs. In its current state, the solution is most suitable for households that purchase electricity at a fixed rate and sell surplus power on the spot market.
 
 ---
 
@@ -27,7 +27,7 @@ input_select:
 
 ## 🔋 Auto Set DoD
 
-Automatically adjusts the Depth of Discharge (DoD) of the battery based on today's solar production forecast and your typical energy consumption. It ensures conservative discharge during low production periods (e.g., winter), while allowing deeper discharge during expected sunny days. Standard winter DoD value is set when SoC (state of charge) drops down to that value. The basic GoodWe Inverter integration is expected.
+Automatically adjusts the Depth of Discharge (DoD) of the battery based on today's solar production forecast and your typical energy consumption. It ensures conservative discharge during low production periods (e.g., winter), while allowing deeper discharge during expected sunny days. Standard winter DoD value is set when SoC (state of charge) drops down to that value. The **basic GoodWe Inverter integration** is expected.
 
 ### Entities
 **GoodWe DoD Entity**
@@ -112,7 +112,7 @@ input_number:
 
 ## 🔁 Fully Charge Battery Once a Week
 
-Ensures that the battery is fully charged at least once a week during winter, if it hasn't been fully charged in the past 7 days. This can help preserve battery health and ensure readiness for colder periods. Triggered at a specific time and only if the production forecast and input season allow it. Experimental GoodWe Inverter integration is expected. This blueprint is usable in case you DON'T buy electricity on spot mode because of fixed trigger time.
+Ensures that the battery is fully charged at least once a week during winter, if it hasn't been fully charged in the past 7 days. This can help preserve battery health and ensure readiness for colder periods. Triggered at a specific time and only if the production forecast and input season allow it. **Experimental GoodWe Inverter integration** is expected. This blueprint is usable in case you DON'T buy electricity on spot mode because of fixed trigger time.
 
 ### Entities
 **Time**
@@ -159,7 +159,7 @@ sensor:
 
 ## ❌ Disable Overflow
 
-Disables electricity overflow when the spot price of electricity is negative (i.e., Export Limit is set to 0). Once the spot price becomes positive again, it restores the Export Limit to its original value. The basic GoodWe Inverter integration is expected.
+Disables electricity overflow when the spot price of electricity is negative (i.e., Export Limit is set to 0). Once the spot price becomes positive again, it restores the Export Limit to its original value. The **basic GoodWe Inverter integration** is expected.
 
 ### Entities
 **Energy Spot Price**
@@ -186,9 +186,102 @@ Disables electricity overflow when the spot price of electricity is negative (i.
 
 ---
 
+## ⚡ Discharge Battery to the Grid When Price Peaks
+
+Triggers eco discharge mode during the most expensive hour of the day, provided tomorrow's PV production is forecasted to be high enough and house consumption allows for discharging. The system calculates optimal discharging power to ensure battery will reach the defined DoD (depth of discharge) by 9:00 the next morning. Ideal during spring or summer when selling electricity to the grid is most profitable. **Experimental GoodWe Inverter integration** is expected. It is highly recommended to combine this blueprint with **Turn Off Eco Discharge Mode When Peak Ends**.
+
+### Entities
+**Energy Spot Price**
+- Actual energy spot price
+- Data available from national electricity markets, often also as HA integrations (Nordpool, EPEX, Czech Energy Spot Prices, ...)
+
+**Daily Max of Spot Price**
+- Sensor with maximum energy spot price during the day
+- Typically available via statistics or spot price integrations
+
+**Minimum Energy Price (for kWh)**
+- Threshold value for minimum price to allow discharge
+- Prevents starting the automation when prices are too low to justify battery discharge
+
+**PV Production Forecast Tomorrow**
+- Forecast for PV production for the next day
+- Available from HA integrations like *Forecast.Solar* which is recommended approach. Eventually you may have access to another service as *Solcast* etc.
+
+**Prediction Threshold for Tomorrow**
+- Minimal kWh value of tomorrow’s production forecast to start automation
+- Helps ensure the battery will be sufficiently recharged after discharge
+
+**GoodWe Soc Sensor**
+- Sensor containing actual State of Charge of the battery
+- Available directly in GoodWe Inverter integration
+
+**GoodWe DoD Entity**
+- Entity defining Depth of Discharge available in GoodWe integration
+
+**Battery Capacity**
+- Input number defining Battery Capacity
+- It's up on user which value is set
+- Available for example after defining in **configuration.yaml** file or you can have your own input number
+
+```YAML
+input_number:
+  battery_capacity:
+    name: Battery Capacity
+    icon: mdi:battery
+    min: 0
+    max: 30
+    unit_of_measurement: kWh
+    step: 0.1
+```
+
+**Average Night Consumption**
+- Value of average night consumption for estimating time of discharging battery
+- Used to calculate if or how much the battery can be discharged in time
+- Available for example after defining in **configuration.yaml** file or you can have your own sensor
+
+```YAML
+sensor:
+  - platform: template
+    sensors:
+      nighttime_consumption:
+        friendly_name: "Nighttime Consumption"
+        unit_of_measurement: "W"
+        value_template: >-
+          {% set hour = now().hour %}
+          {% if hour >= 20 or hour < 9 %}
+            {{ states('sensor.house_consumption') | float(default=0) }}
+          {% else %}
+            0
+          {% endif %}
+  - platform: statistics
+    unique_id: sensor.avg_night_consumption
+    name: Average Night Consumption In Last 3 Days
+    entity_id: sensor.nighttime_consumption
+    state_characteristic: mean
+    sampling_size: 28080
+    max_age:
+      hours: 85
+```
+  
+**House Consumption**
+- Sensor of actual house consumption
+- Available directly in GoodWe Inverter integration
+
+**GoodWe Discharging Power**
+- Target entity describing power of discharging in eco discharge mode
+- Part of GoodWe Inverter integration
+
+**GoodWe Inverter Mode**
+- Target entity describing mode of the inverter
+- Part of GoodWe Inverter integration
+
+[![Open your Home Assistant instance and show the blueprint import dialog with a specific blueprint pre-filled.](https://my.home-assistant.io/badges/blueprint_import.svg)](https://my.home-assistant.io/redirect/blueprint_import/?blueprint_url=https%3A%2F%2Fgithub.com%2Fjan-trnka%2Fhome-assistant-goodwe-pv-control%2Fblob%2Fmain%2Fdischarge_battery_to_grid.yaml)
+
+---
+
 ## 💰 Eco Discharge When Low Price at Noon
 
-Checks conditions at specified time (PV prediction, energy prices) and sets eco discharge mode in the morning (moves the overflows from the afternoon to the morning) by script, then sets general mode again when price is low enough (block of 3 consecutive hours is the cheapest) or if the time to full charge of battery is too long. Ideal in spring or autumn period when energy prices are different during the day. Experimental GoodWe Inverter integration is expected.
+Checks conditions at specified time (PV prediction, energy prices) and sets eco discharge mode in the morning (moves the overflows from the afternoon to the morning) by script, then sets general mode again when price is low enough (block of 3 consecutive hours is the cheapest) or if the time to full charge of battery is too long. Ideal in spring or autumn period when energy prices are different during the day. **Experimental GoodWe Inverter integration** is expected. It is highly recommended to combine this blueprint with **Turn Off Eco Discharge Mode When Peak**.
 
 ### Entities
 **Time**
@@ -267,7 +360,7 @@ sensor:
 - Dictionary with hourly prices of energy
     - Czech - current_spot_electricity_hour_order
     - Nordpool - the only Nordpool entity, default name is "nordpool_<energy_scale>_<region>_<currency>_<some-numbers>"
-- Available by one of the supported integrations (Czech Energy Spot Prices, Nordpool)
+- Available by one of the supported integrations - **Czech Energy Spot Prices**, **Nordpool**
 
 **Actual Block of 3 Hours Energy Price Is Cheapest**
 - Binary sensor defining the cheapest 3 hours block of energy prices
@@ -308,7 +401,7 @@ input_number:
 
 ## ⏱️ Time to Use Overflow
 
-This blueprint monitors battery state of charge, spot electricity price, and the balance between solar production and household consumption. When the battery is full, the spot price is below a defined threshold, and production significantly exceeds consumption, it turns on a switch to indicate it's the right time to use electricity overflow (e.g., to power controllable devices). The switch turns off again when conditions are no longer met. The basic GoodWe Inverter integration is expected.
+This blueprint monitors battery state of charge, spot electricity price, and the balance between solar production and household consumption. When the battery is full, the spot price is below a defined threshold, and production significantly exceeds consumption, it turns on a switch to indicate it's the right time to use electricity overflow (e.g., to power controllable devices). The switch turns off again when conditions are no longer met. The **basic GoodWe Inverter integration** is expected.
 
 ### Entities
 **GoodWe Soc Sensor**
@@ -372,8 +465,7 @@ input_boolean:
 
 ## ⚡ Turn Off Eco Discharge Mode When Peak
 
-This automation turns off the inverter’s eco discharge mode when consumption exceeds production. It helps in preventing excessive battery discharge when energy consumption is higher than the available solar production.
-Experimental GoodWe Inverter integration is expected.
+This automation turns off the inverter’s **eco discharge mode** when consumption exceeds production or battery power. It helps in preventing buying energy from the grid when energy consumption is higher than the available solar production or set battery power. When production is sufficient or consumption drops, the mode is automatically switched back to eco discharge. **Experimental GoodWe Inverter integration** and unchanged names of automations from this repository is expected. Using this blueprint is available with **Eco Discharge When Low Price at Noon** and **Discharge Battery to the Grid**.
 
 ### Entities
 **House Consumption**
@@ -383,6 +475,26 @@ Experimental GoodWe Inverter integration is expected.
 **PV Power**
 - Sensor of actual PV generation
 - Available directly in GoodWe Inverter integration
+
+**GoodWe Discharging Power**
+- GoodWe entity describing power of discharging in eco discharge mode
+- Part of GoodWe Inverter integration
+
+**Battery Capacity**
+- Input number defining Battery Capacity
+- It's up on user which value is set
+- Available for example after defining in **configuration.yaml** file or you can have your own input number
+
+```YAML
+input_number:
+  battery_capacity:
+    name: Battery Capacity
+    icon: mdi:battery
+    min: 0
+    max: 30
+    unit_of_measurement: kWh
+    step: 0.1
+```
 
 **GoodWe Inverter Mode**
 - Target entity describing mode of the inverter
