@@ -188,7 +188,7 @@ Disables electricity overflow when the spot price of electricity is negative (i.
 
 ## ⚡ Discharge Battery to the Grid When Price Peaks
 
-Triggers eco discharge mode during the most expensive hour of the day, provided tomorrow's PV production is forecasted to be high enough and house consumption allows for discharging. The system calculates optimal discharging power to ensure battery will reach the defined DoD (depth of discharge) by 9:00 the next morning. Ideal during spring or summer when selling electricity to the grid is most profitable. **Experimental GoodWe Inverter integration** is expected. It is highly recommended to combine this blueprint with **Turn Off Eco Discharge Mode When Peak Ends**.
+Triggers eco discharge mode during the most expensive hour of the day, provided tomorrow's PV production is forecasted to be high enough and house consumption allows for discharging. The system calculates optimal discharging power to ensure battery will reach the defined DoD (depth of discharge) by 9:00 the next morning. Ideal during spring or summer when selling electricity to the grid is most profitable. **Experimental GoodWe Inverter integration** is expected. It is highly recommended to combine this blueprint with **Turn Off Eco Discharge Mode When Peak**.
 
 ### Entities
 **Energy Spot Price**
