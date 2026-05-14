@@ -207,7 +207,7 @@ actions:
     - sequence:
       - wait_template: >-
           {% set estimated_minutes = remaining_hours_to_charge * 60 %}
-          {% set stop_time = as_timestamp(now()) + estimated_minutes %}
+          {% set stop_time = as_timestamp(now()) + estimated_minutes * 60 %}
           {% set formatted_stop_time = stop_time | timestamp_custom('%H:%M', true, default='23:59:00') %}
           {% set now = as_timestamp(now()) | timestamp_custom('%H:%M', true) %}
           {% set is_cheapest_block = states(is_cheapest) %}

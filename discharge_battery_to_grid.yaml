@@ -163,7 +163,7 @@ conditions:
   - condition: template
     value_template: >-
       {% set estimated_minutes = remaining_hours_to_discharge * 60 %}
-      {% set stop_time = as_timestamp(now()) + estimated_minutes %}
+      {% set stop_time = as_timestamp(now()) + estimated_minutes * 60 %}
       {% set formatted_stop_time = stop_time | timestamp_custom('%H:%M', true, default='00:00:00') %}
 
       {{ estimated_minutes > 0 and formatted_stop_time > '09:00' }}

@@ -73,7 +73,7 @@ actions:
     - action: number.set_value
       target: !input goodwe_entity
       data:
-        value_template: >-
+        value: >-
           {% set entity_id = target_entity.entity_id %}
           {% set unit = state_attr(entity_id, 'unit_of_measurement') %}
           {% set value_W = limit_W %}
