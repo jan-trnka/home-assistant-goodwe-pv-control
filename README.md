@@ -240,19 +240,19 @@ input_number:
 - Available for example after defining in **configuration.yaml** file or you can have your own sensor
 
 ```YAML
+template:
+  - sensor:
+    - unit_of_measurement: "W"
+      default_entity_id: sensor.nighttime_consumption
+      name: "Nighttime Consumption" 
+      state: >-
+        {% set hour = now().hour %}
+        {% if hour >= 20 or hour < 9 %}
+          {{ states('sensor.house_consumption') | float(default=0) }}
+        {% else %}
+          0
+        {% endif %}
 sensor:
-  - platform: template
-    sensors:
-      nighttime_consumption:
-        friendly_name: "Nighttime Consumption"
-        unit_of_measurement: "W"
-        value_template: >-
-          {% set hour = now().hour %}
-          {% if hour >= 20 or hour < 9 %}
-            {{ states('sensor.house_consumption') | float(default=0) }}
-          {% else %}
-            0
-          {% endif %}
   - platform: statistics
     unique_id: sensor.avg_night_consumption
     name: Average Night Consumption In Last 3 Days
